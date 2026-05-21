@@ -12,13 +12,13 @@ class ThemeProvider extends ChangeNotifier {
 
   // Available theme colors
   static const List<Color> themeColors = [
-    Colors.blue,
+    Color.fromARGB(255, 24, 112, 184),
     Colors.teal,
-    Colors.green,
-    Colors.orange,
-    Colors.red,
+    Color.fromARGB(255, 27, 116, 30),
+    Color.fromARGB(255, 212, 139, 28),
+    Color.fromARGB(255, 160, 52, 45),
     Colors.purple,
-    Colors.pink,
+    Color.fromARGB(255, 214, 90, 131),
     Colors.indigo,
   ];
 
