@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class ThemeProvider extends ChangeNotifier {
@@ -12,13 +13,13 @@ class ThemeProvider extends ChangeNotifier {
 
   // Available theme colors
   static const List<Color> themeColors = [
-    Colors.blue,
-    Colors.teal,
-    Colors.green,
-    Colors.orange,
-    Colors.red,
-    Colors.purple,
-    Colors.pink,
+    Color.fromARGB(255, 24, 112, 184),
+    Color.fromARGB(255, 2, 129, 117),
+    Color.fromARGB(255, 27, 116, 30),
+    Color.fromARGB(255, 212, 139, 28),
+    Color.fromARGB(255, 160, 52, 45),
+    Color.fromARGB(255, 82, 22, 93),
+    Color.fromARGB(255, 214, 90, 131),
     Colors.indigo,
   ];
 
@@ -87,11 +88,17 @@ class ThemeProvider extends ChangeNotifier {
         seedColor: _seedColor,
         brightness: Brightness.light,
       ),
+      textTheme: GoogleFonts.poppinsTextTheme(),
       appBarTheme: AppBarTheme(
         centerTitle: true,
         elevation: 0,
         backgroundColor: _seedColor,
         foregroundColor: Colors.white,
+        titleTextStyle: GoogleFonts.poppins(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: _seedColor,
@@ -101,6 +108,9 @@ class ThemeProvider extends ChangeNotifier {
         style: ElevatedButton.styleFrom(
           backgroundColor: _seedColor,
           foregroundColor: Colors.white,
+          textStyle: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -113,11 +123,22 @@ class ThemeProvider extends ChangeNotifier {
         seedColor: _seedColor,
         brightness: Brightness.dark,
       ),
+      textTheme: GoogleFonts.poppinsTextTheme(
+        GoogleFonts.poppinsTextTheme().apply(
+          bodyColor: Colors.white,
+          displayColor: Colors.white,
+        ),
+      ),
       appBarTheme: AppBarTheme(
         centerTitle: true,
         elevation: 0,
         backgroundColor: _seedColor.withOpacity(0.8),
         foregroundColor: Colors.white,
+        titleTextStyle: GoogleFonts.poppins(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: _seedColor,
@@ -127,6 +148,9 @@ class ThemeProvider extends ChangeNotifier {
         style: ElevatedButton.styleFrom(
           backgroundColor: _seedColor,
           foregroundColor: Colors.white,
+          textStyle: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );

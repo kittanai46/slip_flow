@@ -17,6 +17,7 @@ import 'views/home_screen.dart';
 void main() async {
   // Initialize Hive
   await Hive.initFlutter();
+  await StorageServiceImpl.openBox();
 
   // Initialize services
   final storageService = StorageServiceImpl();

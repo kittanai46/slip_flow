@@ -1,3 +1,4 @@
+import 'package:hive_flutter/hive_flutter.dart';
 import '../models/slip_model.dart';
 import '../utils/logger.dart';
 
@@ -10,11 +11,19 @@ abstract class StorageService {
 }
 
 class StorageServiceImpl implements StorageService {
+  static const String _boxName = 'slips';
+
+  Box<Map> get _box => Hive.box<Map>(_boxName);
+
+  static Future<void> openBox() async {
+    await Hive.openBox<Map>(_boxName);
+  }
+
   @override
   Future<void> saveSlip(Slip slip) async {
     try {
       Logger.info('Saving slip: ${slip.id}');
-      // TODO: Implement local storage (Hive, SharedPreferences, SQLite)
+      await _box.put(slip.id, slip.toJson());
     } catch (e) {
       Logger.error('Failed to save slip', e);
       rethrow;
@@ -25,7 +34,7 @@ class StorageServiceImpl implements StorageService {
   Future<void> deleteSlip(String id) async {
     try {
       Logger.info('Deleting slip: $id');
-      // TODO: Implement deletion logic
+      await _box.delete(id);
     } catch (e) {
       Logger.error('Failed to delete slip', e);
       rethrow;
@@ -36,8 +45,9 @@ class StorageServiceImpl implements StorageService {
   Future<Slip?> getSlip(String id) async {
     try {
       Logger.info('Fetching slip: $id');
-      // TODO: Implement fetch logic
-      return null;
+      final data = _box.get(id);
+      if (data == null) return null;
+      return Slip.fromJson(Map<String, dynamic>.from(data));
     } catch (e) {
       Logger.error('Failed to fetch slip', e);
       return null;
@@ -48,8 +58,10 @@ class StorageServiceImpl implements StorageService {
   Future<List<Slip>> getAllSlips() async {
     try {
       Logger.info('Fetching all slips');
-      // TODO: Implement fetch all logic
-      return [];
+      return _box.values
+          .map((data) => Slip.fromJson(Map<String, dynamic>.from(data)))
+          .toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     } catch (e) {
       Logger.error('Failed to fetch all slips', e);
       return [];
@@ -60,7 +72,7 @@ class StorageServiceImpl implements StorageService {
   Future<void> updateSlip(Slip slip) async {
     try {
       Logger.info('Updating slip: ${slip.id}');
-      // TODO: Implement update logic
+      await _box.put(slip.id, slip.toJson());
     } catch (e) {
       Logger.error('Failed to update slip', e);
       rethrow;

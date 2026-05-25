@@ -36,9 +36,25 @@ class OCRServiceImpl implements OCRService {
       final recognizedText = await _textRecognizer.processImage(inputImage);
       final text = recognizedText.text.trim();
 
+      // Extract text blocks with bounding boxes
+      final textBlocks = <ScannedTextBlock>[];
+      for (final block in recognizedText.blocks) {
+        final boundingBox = block.boundingBox;
+        textBlocks.add(
+          ScannedTextBlock(
+            text: block.text.trim(),
+            left: boundingBox.left.toDouble(),
+            top: boundingBox.top.toDouble(),
+            right: boundingBox.right.toDouble(),
+            bottom: boundingBox.bottom.toDouble(),
+          ),
+        );
+      }
+
       if (text.isNotEmpty) {
         Logger.info('✅ Text recognized successfully!');
         Logger.info('Extracted text length: ${text.length} characters');
+        Logger.info('Text blocks found: ${textBlocks.length}');
         Logger.info('===== EXTRACTED TEXT =====');
         Logger.info(text);
         Logger.info('===========================');
@@ -46,6 +62,7 @@ class OCRServiceImpl implements OCRService {
         return ScanResult(
           rawText: text,
           isSuccessful: true,
+          textBlocks: textBlocks,
         );
       }
 
@@ -53,14 +70,17 @@ class OCRServiceImpl implements OCRService {
       return ScanResult(
         rawText: '',
         isSuccessful: false,
+        textBlocks: [],
       );
     } catch (e) {
       Logger.error('Failed to process image', e);
       return ScanResult(
         rawText: '',
         isSuccessful: false,
+        textBlocks: [],
       );
     }
   }
 }
+
 

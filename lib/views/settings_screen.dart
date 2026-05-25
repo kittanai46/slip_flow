@@ -14,90 +14,154 @@ class SettingsScreen extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Icon(Icons.settings, size: 24),
-            const SizedBox(width: 8),
-            Text(l10n.settings),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 20,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with back button
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Title
+              Text(
+                l10n.settings,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Language Selection Card
+              _SettingCard(
+              icon: Icons.language,
+              title: l10n.language,
+              child: _LanguageSelector(
+                currentLocale: localeProvider.locale.languageCode,
+                onChanged: (language) {
+                  localeProvider.setLocale(language);
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Theme Mode Selection Card
+            _SettingCard(
+              icon: Icons.brightness_4,
+              title: l10n.theme,
+              child: _ThemeModeSelector(
+                currentMode: themeProvider.themeMode,
+                onChanged: (mode) {
+                  themeProvider.setThemeMode(mode);
+                },
+                l10n: l10n,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Theme Color Selection Card
+            _SettingCard(
+              icon: Icons.palette,
+              title: 'Color Theme',
+              child: _ColorSelector(
+                currentColor: themeProvider.seedColor,
+                onChanged: (color) {
+                  themeProvider.setSeedColor(color);
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Language Selection
-            _SectionHeader(
-              icon: Icons.language,
-              title: l10n.language,
-            ),
-            const SizedBox(height: 12),
-            _LanguageSelector(
-              currentLocale: localeProvider.locale.languageCode,
-              onChanged: (language) {
-                localeProvider.setLocale(language);
-              },
-            ),
-            const SizedBox(height: 32),
-
-            // Theme Mode Selection
-            _SectionHeader(
-              icon: Icons.brightness_4,
-              title: l10n.theme,
-            ),
-            const SizedBox(height: 12),
-            _ThemeModeSelector(
-              currentMode: themeProvider.themeMode,
-              onChanged: (mode) {
-                themeProvider.setThemeMode(mode);
-              },
-              l10n: l10n,
-            ),
-            const SizedBox(height: 32),
-
-            // Theme Color Selection
-            _SectionHeader(
-              icon: Icons.palette,
-              title: 'Color Theme',
-            ),
-            const SizedBox(height: 12),
-            _ColorSelector(
-              currentColor: themeProvider.seedColor,
-              onChanged: (color) {
-                themeProvider.setSeedColor(color);
-              },
-            ),
-          ],
-        ),
       ),
     );
   }
 }
 
-class _SectionHeader extends StatelessWidget {
+class _SettingCard extends StatelessWidget {
   final IconData icon;
   final String title;
+  final Widget child;
 
-  const _SectionHeader({
+  const _SettingCard({
     required this.icon,
     required this.title,
+    required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 24),
-        const SizedBox(width: 12),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withOpacity(0.3),
           ),
         ),
-      ],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 24,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              child,
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -152,22 +216,44 @@ class _LanguageButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected
-            ? Theme.of(context).primaryColor
-            : Colors.grey[300],
-        foregroundColor: isSelected ? Colors.white : Colors.black,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 18),
-          const SizedBox(width: 8),
-          Text(label),
-        ],
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: isSelected ? colorScheme.primary : colorScheme.surfaceContainerLowest,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected ? colorScheme.primary : colorScheme.outlineVariant.withOpacity(0.3),
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
+                  color: isSelected ? Colors.white : colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? Colors.white : colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -256,8 +342,8 @@ class _ColorSelector extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
       ),
       itemCount: ThemeProvider.themeColors.length,
       itemBuilder: (context, index) {
@@ -265,22 +351,35 @@ class _ColorSelector extends StatelessWidget {
         final isSelected = currentColor.value == color.value;
         return GestureDetector(
           onTap: () => onChanged(color),
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
               border: isSelected
-                  ? Border.all(color: Colors.white, width: 4)
-                  : Border.all(color: Colors.grey, width: 1),
+                  ? Border.all(
+                      color: Colors.white,
+                      width: 3,
+                    )
+                  : Border.all(
+                      color: Colors.grey.withOpacity(0.3),
+                      width: 1,
+                    ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: color.withOpacity(0.5),
-                        blurRadius: 8,
+                        color: color.withOpacity(0.6),
+                        blurRadius: 12,
                         spreadRadius: 2,
                       ),
                     ]
-                  : null,
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
             ),
             child: isSelected
                 ? const Center(

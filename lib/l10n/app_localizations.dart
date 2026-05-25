@@ -113,14 +113,20 @@ abstract class AppLocalizations {
   /// No description provided for @scan.
   ///
   /// In en, this message translates to:
-  /// **'Scan'**
+  /// **'Camera'**
   String get scan;
 
   /// No description provided for @scanned_slips.
   ///
   /// In en, this message translates to:
-  /// **'Scanned Slips'**
+  /// **'List scan'**
   String get scanned_slips;
+
+  /// No description provided for @scripslipflowe.
+  ///
+  /// In en, this message translates to:
+  /// **'Application detecting text in images'**
+  String get scripslipflowe;
 
   /// No description provided for @scan_receipt.
   ///
@@ -265,6 +271,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
+
+  /// No description provided for @receipt_details.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt Details'**
+  String get receipt_details;
+
+  /// No description provided for @delete_receipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Receipt'**
+  String get delete_receipt;
+
+  /// No description provided for @delete_receipt_confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to delete this receipt?'**
+  String get delete_receipt_confirmation;
+
+  /// No description provided for @no_text.
+  ///
+  /// In en, this message translates to:
+  /// **'(No text)'**
+  String get no_text;
+
+  /// No description provided for @scanned_text.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned Text'**
+  String get scanned_text;
+
+  /// No description provided for @receipt_text_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt text...'**
+  String get receipt_text_hint;
+
+  /// No description provided for @saved_successfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved successfully'**
+  String get saved_successfully;
+
+  /// No description provided for @help.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get help;
+
+  /// No description provided for @menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Features'**
+  String get menu;
+
+  /// No description provided for @about_app.
+  ///
+  /// In en, this message translates to:
+  /// **'About App'**
+  String get about_app;
+
+  /// No description provided for @about_app_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Slip Flow is an application for scanning and saving text from receipts, images and documents using advanced OCR technology.'**
+  String get about_app_description;
+
+  /// No description provided for @how_to_scan.
+  ///
+  /// In en, this message translates to:
+  /// **'How to Scan'**
+  String get how_to_scan;
+
+  /// No description provided for @how_to_scan_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Easily scan your receipts or documents by taking a photo and let the app automatically read the text.'**
+  String get how_to_scan_description;
+
+  /// No description provided for @step1_open_scan.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Open the scan page from the home screen'**
+  String get step1_open_scan;
+
+  /// No description provided for @step2_capture_receipt.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Capture a photo of your receipt or document'**
+  String get step2_capture_receipt;
+
+  /// No description provided for @step3_confirm_text.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Confirm the scanned text and tap save'**
+  String get step3_confirm_text;
+
+  /// No description provided for @text_selection.
+  ///
+  /// In en, this message translates to:
+  /// **'Text Selection'**
+  String get text_selection;
+
+  /// No description provided for @text_selection_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Select only the portion of text you want to save by tapping the text regions in the image.'**
+  String get text_selection_description;
+
+  /// No description provided for @step1_tap_select_icon.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Tap the touch icon (👆) to enter selection mode'**
+  String get step1_tap_select_icon;
+
+  /// No description provided for @step2_tap_text_regions.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Tap on the text regions you want to select (green numbers)'**
+  String get step2_tap_text_regions;
+
+  /// No description provided for @step3_confirm_selection.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Selected text will appear in the text field below'**
+  String get step3_confirm_selection;
+
+  /// No description provided for @how_to_save.
+  ///
+  /// In en, this message translates to:
+  /// **'How to Save'**
+  String get how_to_save;
+
+  /// No description provided for @how_to_save_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the scanned text for reference and future search.'**
+  String get how_to_save_description;
+
+  /// No description provided for @step1_edit_text.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Edit the text in the text field as needed'**
+  String get step1_edit_text;
+
+  /// No description provided for @step2_tap_save.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Tap the save button at the bottom'**
+  String get step2_tap_save;
+
+  /// No description provided for @step3_saved_successfully.
+  ///
+  /// In en, this message translates to:
+  /// **'3. The data will be automatically saved to your list'**
+  String get step3_saved_successfully;
+
+  /// No description provided for @how_to_view.
+  ///
+  /// In en, this message translates to:
+  /// **'How to View'**
+  String get how_to_view;
+
+  /// No description provided for @how_to_view_description.
+  ///
+  /// In en, this message translates to:
+  /// **'View details of all saved receipts with date and time.'**
+  String get how_to_view_description;
+
+  /// No description provided for @step1_go_to_list.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Tap Scanned Slips from the home screen'**
+  String get step1_go_to_list;
+
+  /// No description provided for @step2_tap_receipt.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Tap on a receipt to view its details'**
+  String get step2_tap_receipt;
+
+  /// No description provided for @step3_view_details.
+  ///
+  /// In en, this message translates to:
+  /// **'3. View the image and saved text'**
+  String get step3_view_details;
+
+  /// No description provided for @how_to_delete.
+  ///
+  /// In en, this message translates to:
+  /// **'How to Delete'**
+  String get how_to_delete;
+
+  /// No description provided for @how_to_delete_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove receipts you no longer need.'**
+  String get how_to_delete_description;
+
+  /// No description provided for @step1_long_press_receipt.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Long press on a receipt in the list'**
+  String get step1_long_press_receipt;
+
+  /// No description provided for @step2_confirm_delete.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Confirm the deletion when prompted'**
+  String get step2_confirm_delete;
+
+  /// No description provided for @tips_and_tricks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips and Tricks'**
+  String get tips_and_tricks;
+
+  /// No description provided for @tips_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Get the best results from scanning by following these tips.'**
+  String get tips_description;
+
+  /// No description provided for @tip1_good_lighting.
+  ///
+  /// In en, this message translates to:
+  /// **'💡 Use sufficient lighting to make the text clear'**
+  String get tip1_good_lighting;
+
+  /// No description provided for @tip2_clear_image.
+  ///
+  /// In en, this message translates to:
+  /// **'📷 Take photos straight and clearly without blur or shadows'**
+  String get tip2_clear_image;
+
+  /// No description provided for @tip3_select_accurate.
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Select text accurately, only the parts you need'**
+  String get tip3_select_accurate;
 }
 
 class _AppLocalizationsDelegate

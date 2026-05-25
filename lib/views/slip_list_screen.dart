@@ -4,6 +4,7 @@ import '../l10n/app_localizations.dart';
 import '../view_models/slip_list_view_model.dart';
 import '../constants/app_constants.dart';
 import 'scan_screen.dart';
+import 'slip_detail_screen.dart';
 
 class SlipListScreen extends StatefulWidget {
   const SlipListScreen({super.key});
@@ -26,23 +27,54 @@ class _SlipListScreenState extends State<SlipListScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
+      body: SafeArea(
+        child: Column(
           children: [
-            const Icon(Icons.receipt_long, size: 24),
-            const SizedBox(width: 8),
-            Text(l10n.scanned_slips),
-          ],
-        ),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: _showFilterMenu,
-          ),
-        ],
-      ),
-      body: Consumer<SlipListViewModel>(
+            // Header with back button and title
+            Padding(
+              padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.arrow_back,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppDimensions.paddingMedium),
+                  Icon(
+                    Icons.receipt_long,
+                    size: 24,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.scanned_slips,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.filter_list),
+                    onPressed: _showFilterMenu,
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Consumer<SlipListViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -67,68 +99,220 @@ class _SlipListScreenState extends State<SlipListScreen> {
           }
 
           if (viewModel.slips.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.receipt_long, size: 64, color: Colors.grey),
-                  const SizedBox(height: AppDimensions.paddingMedium),
-                  Text(l10n.no_slips),
-                  const SizedBox(height: AppDimensions.paddingMedium),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ScanScreen(),
+            return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1),
+                    Theme.of(context).colorScheme.primaryContainer.withOpacity(0.05),
+                  ],
+                ),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppDimensions.paddingLarge),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.receipt_long,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: AppDimensions.paddingLarge),
+                    Text(
+                      l10n.no_slips,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppDimensions.paddingSmall),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingMedium),
+                      child: Text(
+                        'Start by scanning your first receipt',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.add),
-                    label: Text(l10n.scan),
-                  ),
-                ],
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: AppDimensions.paddingLarge),
+                    FilledButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ScanScreen(),
+                          ),
+                        ).then((_) {
+                          if (context.mounted) {
+                            context.read<SlipListViewModel>().loadSlips();
+                          }
+                        });
+                      },
+                      icon: const Icon(Icons.camera_alt),
+                      label: Text(l10n.scan),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppDimensions.paddingLarge,
+                          vertical: AppDimensions.paddingMedium,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingMedium,
+              vertical: AppDimensions.paddingMedium,
+            ),
             itemCount: viewModel.slips.length,
             itemBuilder: (context, index) {
               final slip = viewModel.slips[index];
-              return Card(
-                child: ListTile(
-                  leading: ClipRRect(
-                    borderRadius:
-                        BorderRadius.circular(AppDimensions.radiusSmall),
+              final dateStr =
+                  '${slip.createdAt.day}/${slip.createdAt.month}/${slip.createdAt.year}';
+              final previewText = slip.notes.isNotEmpty
+                  ? slip.notes.replaceAll('\n', ' ').trim()
+                  : '-';
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppDimensions.paddingMedium),
+                child: Material(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                  elevation: 1,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SlipDetailScreen(slip: slip),
+                        ),
+                      );
+                    },
+                    onLongPress: () {
+                      _showDeleteDialog(context, slip.id, viewModel);
+                    },
                     child: Container(
-                      width: 50,
-                      height: 50,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.receipt),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outlineVariant
+                              .withOpacity(0.3),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+                        child: Row(
+                          children: [
+                            // Receipt icon box with gradient background
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Theme.of(context)
+                                        .colorScheme
+                                        .primaryContainer,
+                                    Theme.of(context)
+                                        .colorScheme
+                                        .primaryContainer
+                                        .withOpacity(0.7),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                    AppDimensions.radiusSmall),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.2),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.receipt_long,
+                                color:
+                                    Theme.of(context).colorScheme.primary,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(width: AppDimensions.paddingMedium),
+                            // Text content
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    dateStr,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                      color:
+                                          Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    previewText.length > 50
+                                        ? '${previewText.substring(0, 50)}...'
+                                        : previewText,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Arrow with color
+                            Icon(
+                              Icons.chevron_right,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 22,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                  title: Text(slip.storeName),
-                  subtitle: Text(slip.category),
-                  trailing: Text(
-                    '฿${slip.amount.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  onTap: () {
-                    // TODO: Navigate to detail screen
-                  },
-                  onLongPress: () {
-                    _showDeleteDialog(context, slip.id, viewModel);
-                  },
                 ),
               );
             },
           );
         },
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -137,7 +321,11 @@ class _SlipListScreenState extends State<SlipListScreen> {
             MaterialPageRoute(
               builder: (context) => const ScanScreen(),
             ),
-          );
+          ).then((_) {
+            if (context.mounted) {
+              context.read<SlipListViewModel>().loadSlips();
+            }
+          });
         },
         icon: const Icon(Icons.camera),
         label: Text(AppLocalizations.of(context)!.scan),
