@@ -15,7 +15,7 @@
 # Preview Application
 
 <p align="center">
-  <img src="assets/preview/preview_application.png"/>
+  <img src="assets/preview/preview_application.png"width="200"/>
 </p>
 
 -------------
