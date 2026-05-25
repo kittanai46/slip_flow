@@ -4,11 +4,13 @@ import '../l10n/app_localizations.dart';
 import '../view_models/slip_scan_view_model.dart';
 import '../constants/app_constants.dart';
 import '../services/ocr_service.dart';
-import 'ocr_result_screen.dart';
+import 'receipt_confirmation_screen.dart';
 import 'package:camera/camera.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({super.key});
+  final bool fromGallery;
+  const ScanScreen({super.key, this.fromGallery = false});
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -22,7 +24,41 @@ class _ScanScreenState extends State<ScanScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
+    if (widget.fromGallery) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _pickFromGallery());
+    } else {
+      _initializeCamera();
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked == null) {
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+    if (mounted) {
+      final ocrService = OCRServiceImpl();
+      try {
+        final scanResult = await ocrService.extractTextFromImage(picked.path);
+        if (mounted) {
+          final viewModel = context.read<SlipScanViewModel>();
+          viewModel.imagePath = picked.path;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ReceiptConfirmationScreen(
+                imagePath: picked.path,
+                scannedData: scanResult,
+              ),
+            ),
+          );
+        }
+      } finally {
+        await ocrService.dispose();
+      }
+    }
   }
 
   @override
@@ -76,18 +112,17 @@ class _ScanScreenState extends State<ScanScreen> {
         final ocrService = OCRServiceImpl();
         try {
           final scanResult = await ocrService.extractTextFromImage(image.path);
-          
+
           if (mounted) {
             final viewModel = context.read<SlipScanViewModel>();
             viewModel.imagePath = image.path;
-            await viewModel.takePhoto();
-            
-            // Navigate to OCR result screen with extracted text
+
+            // Navigate to confirmation screen where user can edit and save
             if (mounted) {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => OCRResultScreen(
+                  builder: (context) => ReceiptConfirmationScreen(
                     imagePath: image.path,
                     scannedData: scanResult,
                   ),
@@ -110,20 +145,9 @@ class _ScanScreenState extends State<ScanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Icon(Icons.camera, size: 24),
-            const SizedBox(width: 8),
-            Text(l10n.scan_receipt),
-          ],
-        ),
-        elevation: 0,
-      ),
-      body: Consumer<SlipScanViewModel>(
+      body: SafeArea(
+        child: Consumer<SlipScanViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isProcessing) {
             return const Center(
@@ -147,30 +171,61 @@ class _ScanScreenState extends State<ScanScreen> {
 
           return _buildCameraViewWidget();
         },
+        ),
       ),
     );
   }
 
   Widget _buildCameraErrorWidget() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.camera_enhance, size: 64, color: Colors.red),
-          const SizedBox(height: AppDimensions.paddingMedium),
-          Text(_cameraError ?? 'Camera error'),
-          const SizedBox(height: AppDimensions.paddingMedium),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _cameraError = null;
-                _cameraInitialized = false;
-              });
-              _initializeCamera();
-            },
-            child: const Text('Retry'),
-          ),
-        ],
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.red.withOpacity(0.1),
+            Colors.red.withOpacity(0.05),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.paddingLarge),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.camera_enhance, size: 64, color: Colors.red),
+            ),
+            const SizedBox(height: AppDimensions.paddingLarge),
+            Text(
+              _cameraError ?? 'Camera error',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppDimensions.paddingMedium),
+            FilledButton.icon(
+              onPressed: () {
+                setState(() {
+                  _cameraError = null;
+                  _cameraInitialized = false;
+                });
+                _initializeCamera();
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.paddingLarge,
+                  vertical: AppDimensions.paddingMedium,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -179,6 +234,8 @@ class _ScanScreenState extends State<ScanScreen> {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
       return const Center(child: CircularProgressIndicator());
     }
+
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Stack(
       children: [
@@ -189,37 +246,120 @@ class _ScanScreenState extends State<ScanScreen> {
           right: 0,
           bottom: 0,
           child: CustomPaint(
-            painter: ScanFramePainter(),
+            painter: ScanFramePainter(colorScheme: colorScheme),
           ),
         ),
+        // Back button top-left
         Positioned(
-          bottom: 30,
-          left: 0,
-          right: 0,
-          child: Column(
-            children: [
-              Text(
-                AppLocalizations.of(context)!.camera,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: AppDimensions.paddingMedium),
-              ElevatedButton(
-                onPressed: _takePhoto,
-                style: ElevatedButton.styleFrom(
-                  shape: const CircleBorder(),
-                  padding: const EdgeInsets.all(16),
-                  backgroundColor: Colors.blue,
+          top: 16,
+          left: 16,
+          child: SafeArea(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.45),
+                  shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.camera_alt,
-                  size: 32,
+                  Icons.arrow_back,
                   color: Colors.white,
+                  size: 24,
                 ),
               ),
-            ],
+            ),
+          ),
+        ),
+        // Instruction text at top
+        Positioned(
+          top: 30,
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingMedium,
+              vertical: AppDimensions.paddingSmall,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+              ),
+            ),
+            margin: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingMedium),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.info, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  AppLocalizations.of(context)!.camera,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Capture button at bottom
+        Positioned(
+          bottom: 40,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Column(
+              children: [
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        colorScheme.primary,
+                        colorScheme.primary.withOpacity(0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.primary.withOpacity(0.4),
+                        blurRadius: 12,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _takePhoto,
+                      customBorder: const CircleBorder(),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        size: 32,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Tap to capture',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -227,21 +367,57 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Widget _buildErrorWidget(SlipScanViewModel viewModel) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 64),
-          const SizedBox(height: AppDimensions.paddingMedium),
-          Text(viewModel.errorMessage ?? 'Unknown error'),
-          const SizedBox(height: AppDimensions.paddingMedium),
-          ElevatedButton(
-            onPressed: () {
-              viewModel.clearError();
-            },
-            child: const Text('Try Again'),
-          ),
-        ],
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.orange.withOpacity(0.1),
+            Colors.orange.withOpacity(0.05),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.paddingLarge),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.error_outline, color: Colors.orange, size: 64),
+            ),
+            const SizedBox(height: AppDimensions.paddingLarge),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingMedium),
+              child: Text(
+                viewModel.errorMessage ?? 'Unknown error',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.paddingLarge),
+            FilledButton.icon(
+              onPressed: () {
+                viewModel.clearError();
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.paddingLarge,
+                  vertical: AppDimensions.paddingMedium,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -249,16 +425,20 @@ class _ScanScreenState extends State<ScanScreen> {
 
 /// Custom painter for the receipt scanning frame
 class ScanFramePainter extends CustomPainter {
+  final ColorScheme? colorScheme;
+
+  ScanFramePainter({this.colorScheme});
+
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
-      ..strokeWidth = 2
+    final cornerPaint = Paint()
+      ..color = colorScheme?.primary ?? Colors.green
+      ..strokeWidth = 5
       ..style = PaintingStyle.stroke;
 
-    final cornerPaint = Paint()
-      ..color = Colors.green
-      ..strokeWidth = 4
+    final framePaint = Paint()
+      ..color = Colors.white.withOpacity(0.2)
+      ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
     // Frame dimensions (receipt aspect ratio ~3:5)
@@ -275,56 +455,64 @@ class ScanFramePainter extends CustomPainter {
         Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)),
         Path()..addRect(rect),
       ),
-      Paint()..color = Colors.black.withOpacity(0.3),
+      Paint()..color = Colors.black.withOpacity(0.4),
     );
 
-    // Draw frame border
-    canvas.drawRect(rect, paint);
+    // Draw frame border with rounded corners
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(12)),
+      framePaint,
+    );
 
     // Draw corner markers
-    final cornerLength = 20.0;
-    // Top-left
+    final cornerLength = 24.0;
+    final cornerPadding = 8.0;
+    
+    // Top-left corner
     canvas.drawLine(
-      Offset(frameLeft, frameTop),
-      Offset(frameLeft + cornerLength, frameTop),
+      Offset(frameLeft + cornerPadding, frameTop),
+      Offset(frameLeft + cornerPadding + cornerLength, frameTop),
       cornerPaint,
     );
     canvas.drawLine(
-      Offset(frameLeft, frameTop),
-      Offset(frameLeft, frameTop + cornerLength),
+      Offset(frameLeft, frameTop + cornerPadding),
+      Offset(frameLeft, frameTop + cornerPadding + cornerLength),
       cornerPaint,
     );
-    // Top-right
+    
+    // Top-right corner
     canvas.drawLine(
-      Offset(frameLeft + frameWidth, frameTop),
-      Offset(frameLeft + frameWidth - cornerLength, frameTop),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      Offset(frameLeft + frameWidth, frameTop),
-      Offset(frameLeft + frameWidth, frameTop + cornerLength),
-      cornerPaint,
-    );
-    // Bottom-left
-    canvas.drawLine(
-      Offset(frameLeft, frameTop + frameHeight),
-      Offset(frameLeft + cornerLength, frameTop + frameHeight),
+      Offset(frameLeft + frameWidth - cornerPadding, frameTop),
+      Offset(frameLeft + frameWidth - cornerPadding - cornerLength, frameTop),
       cornerPaint,
     );
     canvas.drawLine(
-      Offset(frameLeft, frameTop + frameHeight),
-      Offset(frameLeft, frameTop + frameHeight - cornerLength),
+      Offset(frameLeft + frameWidth, frameTop + cornerPadding),
+      Offset(frameLeft + frameWidth, frameTop + cornerPadding + cornerLength),
       cornerPaint,
     );
-    // Bottom-right
+    
+    // Bottom-left corner
     canvas.drawLine(
-      Offset(frameLeft + frameWidth, frameTop + frameHeight),
-      Offset(frameLeft + frameWidth - cornerLength, frameTop + frameHeight),
+      Offset(frameLeft + cornerPadding, frameTop + frameHeight),
+      Offset(frameLeft + cornerPadding + cornerLength, frameTop + frameHeight),
       cornerPaint,
     );
     canvas.drawLine(
-      Offset(frameLeft + frameWidth, frameTop + frameHeight),
-      Offset(frameLeft + frameWidth, frameTop + frameHeight - cornerLength),
+      Offset(frameLeft, frameTop + frameHeight - cornerPadding),
+      Offset(frameLeft, frameTop + frameHeight - cornerPadding - cornerLength),
+      cornerPaint,
+    );
+    
+    // Bottom-right corner
+    canvas.drawLine(
+      Offset(frameLeft + frameWidth - cornerPadding, frameTop + frameHeight),
+      Offset(frameLeft + frameWidth - cornerPadding - cornerLength, frameTop + frameHeight),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(frameLeft + frameWidth, frameTop + frameHeight - cornerPadding),
+      Offset(frameLeft + frameWidth, frameTop + frameHeight - cornerPadding - cornerLength),
       cornerPaint,
     );
   }
